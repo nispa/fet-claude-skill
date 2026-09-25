@@ -1,29 +1,29 @@
-# Formato `.fet` — riferimento pratico
+# The `.fet` format — practical reference
 
-Verificato su FET 7.10.5, che legge anche i file `version="5.x"` e li converte (compare un
-avviso in `warnings.txt`, innocuo). Un tag sbagliato fa rifiutare **l'intero** file, spesso senza
-indicare la riga: usare solo tag visti in un file salvato dalla GUI.
+Checked against FET 7.10.5, which also reads `version="5.x"` files and converts them (a harmless
+notice appears in `warnings.txt`). A wrong tag makes FET reject the **whole** file, often without
+pointing to the line: only use tags you have seen in a file saved by the GUI.
 
-## Scheletro
+## Skeleton
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <fet version="5.47.0">
 <Institution_Name>…</Institution_Name>
 <Comments>…</Comments>
-<Days_List><Number_of_Days>5</Number_of_Days><Day><Name>Lun</Name></Day>…</Days_List>
+<Days_List><Number_of_Days>5</Number_of_Days><Day><Name>Mon</Name></Day>…</Days_List>
 <Hours_List><Number_of_Hours>6</Number_of_Hours><Hour><Name>08-09</Name></Hour>…</Hours_List>
-<Subjects_List><Subject><Name>Matematica</Name></Subject>…</Subjects_List>
+<Subjects_List><Subject><Name>Maths</Name></Subject>…</Subjects_List>
 <Activity_Tags_List></Activity_Tags_List>
-<Teachers_List><Teacher><Name>Rossi</Name><Comments></Comments></Teacher>…</Teachers_List>
+<Teachers_List><Teacher><Name>Smith</Name><Comments></Comments></Teacher>…</Teachers_List>
 <Students_List>
   <Year><Name>1A</Name><Number_of_Students>0</Number_of_Students>
-    <!-- facoltativi: <Group><Name>1A-lat</Name>…<Subgroup><Name>…</Name></Subgroup></Group> -->
+    <!-- optional: <Group><Name>1A-latin</Name>…<Subgroup><Name>…</Name></Subgroup></Group> -->
   </Year>
 </Students_List>
 <Activities_List>…</Activities_List>
 <Buildings_List></Buildings_List>
-<Rooms_List><Room><Name>Aula1</Name><Building></Building><Capacity>30</Capacity><Virtual>false</Virtual><Comments></Comments></Room></Rooms_List>
+<Rooms_List><Room><Name>Room1</Name><Building></Building><Capacity>30</Capacity><Virtual>false</Virtual><Comments></Comments></Room></Rooms_List>
 <Time_Constraints_List>
   <ConstraintBasicCompulsoryTime><Weight_Percentage>100</Weight_Percentage><Active>true</Active><Comments></Comments></ConstraintBasicCompulsoryTime>
   …
@@ -34,91 +34,91 @@ indicare la riga: usare solo tag visti in un file salvato dalla GUI.
 </fet>
 ```
 
-Giorni e ore sono **etichette libere**, e i vincoli li citano per nome: il nome deve coincidere
-alla lettera. Le ore non devono essere per forza consecutive nel tempo reale: una pausa pranzo si
-modella semplicemente non creando lo slot (`12-13` seguito da `15-16`). Attenzione però: FET
-considera **adiacenti** due slot consecutivi nella lista, quindi un'attività da 2 h può cadere a
-cavallo della pausa. Se non deve, rendere indisponibile lo slot prima della pausa o usare una
-`Break`.
+Days and hours are **free labels**, and constraints refer to them by name: the name must match
+exactly. Hours don't need to be consecutive in real time: a lunch break is modelled simply by
+not creating the slot (`12-13` followed by `15-16`). But FET treats two slots that are
+consecutive in the list as **adjacent**, so a 2-hour activity may straddle the break. If it must
+not, make the slot before the break unavailable or use a `Break`.
 
-## Attività
+## Activities
 
 ```xml
 <Activity>
-  <Teacher>Rossi</Teacher>            <!-- 0..n docenti -->
-  <Subject>Matematica</Subject>
-  <Students>1A</Students>             <!-- 0..n insiemi di studenti: più tag = lezione comune -->
+  <Teacher>Smith</Teacher>            <!-- 0..n teachers -->
+  <Subject>Maths</Subject>
+  <Students>1A</Students>             <!-- 0..n student sets: several tags = shared lesson -->
   <Students>1B</Students>
-  <Duration>2</Duration>              <!-- slot consecutivi -->
-  <Total_Duration>4</Total_Duration>  <!-- somma delle Duration delle attività con lo stesso Group_Id -->
-  <Id>1</Id>                          <!-- unico -->
-  <Activity_Group_Id>1</Activity_Group_Id>  <!-- attività "sorelle" (split); 0 se da sola -->
+  <Duration>2</Duration>              <!-- consecutive slots -->
+  <Total_Duration>4</Total_Duration>  <!-- sum of the Durations of activities with the same Group_Id -->
+  <Id>1</Id>                          <!-- unique -->
+  <Activity_Group_Id>1</Activity_Group_Id>  <!-- "sibling" activities (split); 0 if alone -->
   <Active>true</Active>
   <Comments></Comments>
 </Activity>
 ```
 
-- **Lezione comune a più classi** (mutuazione, accorpamento): *una* attività con più
-  `<Students>`, non N attività legate da vincoli. Le ore non si contano due volte e FET
-  impedisce da sé che le classi abbiano altro in quello slot.
-- Un corso da 12 h in blocchi da 3 si modella con 4 attività, stesso `Activity_Group_Id`,
-  `Total_Duration` 12.
+- **A lesson shared by several classes** (cross-listed course, merged classes): *one* activity
+  with several `<Students>`, not N activities tied by constraints. Hours are not counted twice
+  and FET itself prevents those classes from having anything else in that slot.
+- A 12-hour course in 3-hour blocks is modelled as 4 activities with the same
+  `Activity_Group_Id` and `Total_Duration` 12.
 
-## Calendario reale invece della settimana tipo
+## Real calendar instead of a repeating week
 
-FET produce un orario **settimanale ripetuto**. Per date puntuali («no il 22 ottobre», «dal 3
-ottobre», termine diverso per classe) usare i giorni come **date**: `<Day><Name>Lun 05/10</Name></Day>`
-per ogni giorno del periodo. Tutte le esclusioni diventano `Not_Available_Time`. Costo: file
-grandi (1-2 MB con ~90 giorni), che FET gestisce comunque bene.
+FET produces a **repeating weekly** timetable. For one-off dates ("not on 22 October", "from
+3 October", a different end date per class) use days as **dates**:
+`<Day><Name>Mon 05/10</Name></Day>` for every day of the period. All exclusions become
+`Not_Available_Time` entries. Cost: large files (1–2 MB for ~90 days), which FET still handles well.
 
-## Vincoli di tempo usati spesso (tag verificati)
+## Commonly used time constraints (verified tags)
 
-| Tag | Campi principali | Uso |
+| Tag | Main fields | Use |
 |---|---|---|
-| `ConstraintTeacherNotAvailableTimes` | `Weight_Percentage`, `Teacher`, `Number_of_Not_Available_Times`, `Not_Available_Time{Day,Hour}` | disponibilità dei docenti |
-| `ConstraintStudentsSetNotAvailableTimes` | idem con `Students` | fascia oraria delle classi, fine anticipata |
-| `ConstraintTeacherMaxHoursDaily` | `Teacher_Name`, `Maximum_Hours_Daily` | max ore/giorno per docente |
-| `ConstraintTeachersMaxHoursDaily` | `Maximum_Hours_Daily` | lo stesso per tutti i docenti |
-| `ConstraintStudentsSetMinHoursDaily` | `Students`, `Minimum_Hours_Daily`, `Allow_Empty_Days` | niente giornate vuote (`false`) |
+| `ConstraintTeacherNotAvailableTimes` | `Weight_Percentage`, `Teacher`, `Number_of_Not_Available_Times`, `Not_Available_Time{Day,Hour}` | teacher availability |
+| `ConstraintStudentsSetNotAvailableTimes` | same, with `Students` | class time window, early end |
+| `ConstraintTeacherMaxHoursDaily` | `Teacher_Name`, `Maximum_Hours_Daily` | max hours per day for a teacher |
+| `ConstraintTeachersMaxHoursDaily` | `Maximum_Hours_Daily` | the same for all teachers |
+| `ConstraintStudentsSetMinHoursDaily` | `Students`, `Minimum_Hours_Daily`, `Allow_Empty_Days` | no empty days (`false`) |
 | `ConstraintStudentsSetMaxHoursDaily` | `Students`, `Maximum_Hours_Daily` | |
-| `ConstraintActivitiesPreferredTimeSlots` | `Teacher_Name`, `Students_Name`, `Subject_Name`, `Activity_Tag_Name` (vuoti = tutti), `Duration` (facoltativo), `Number_of_Preferred_Time_Slots`, `Preferred_Time_Slot{Preferred_Day,Preferred_Hour}` | limitare *dove* possono cadere certe attività, ad esempio le lezioni da 3 h solo nei feriali |
-| `ConstraintActivityPreferredStartingTime` | `Activity_Id`, `Preferred_Day`, `Preferred_Hour`, `Permanently_Locked` | fissare una lezione |
-| `ConstraintMinDaysBetweenActivities` | `Consecutive_If_Same_Day`, `Number_of_Activities`, `Activity_Id`…, `MinDays` | spalmare le lezioni di un corso su giorni diversi (di solito peso 95) |
-| `ConstraintActivitiesSameStartingTime` | `Number_of_Activities`, `Activity_Id`… | simultaneità: **non** serve per le lezioni comuni, vedi sopra |
+| `ConstraintActivitiesPreferredTimeSlots` | `Teacher_Name`, `Students_Name`, `Subject_Name`, `Activity_Tag_Name` (empty = all), `Duration` (optional), `Number_of_Preferred_Time_Slots`, `Preferred_Time_Slot{Preferred_Day,Preferred_Hour}` | restrict *where* some activities may go, e.g. 3-hour lessons on weekdays only |
+| `ConstraintActivityPreferredStartingTime` | `Activity_Id`, `Preferred_Day`, `Preferred_Hour`, `Permanently_Locked` | pin a lesson |
+| `ConstraintMinDaysBetweenActivities` | `Consecutive_If_Same_Day`, `Number_of_Activities`, `Activity_Id`…, `MinDays` | spread a course's lessons over different days (usually weight 95) |
+| `ConstraintActivitiesSameStartingTime` | `Number_of_Activities`, `Activity_Id`… | simultaneity: **not** needed for shared lessons, see above |
 
-Ogni vincolo termina con `<Active>true</Active><Comments>…</Comments>`. `Weight_Percentage`
-100 = inderogabile; sotto 100 FET può violarlo, e le violazioni finiscono in `*_soft_conflicts.txt`.
+Every constraint ends with `<Active>true</Active><Comments>…</Comments>`. `Weight_Percentage`
+100 = hard; below 100 FET may break it, and violations are listed in `*_soft_conflicts.txt`.
 
-**Cosa FET non sa esprimere** (serve un controllo esterno, o si ristruttura la griglia):
-«al massimo N ore *in un giorno specifico*», vincoli condizionali («se c'è X il sabato allora il
-sabato è di pomeriggio»), date di fine da ottimizzare. Si calcolano fuori (ad es. CP-SAT) e si
-passano a FET come indisponibilità.
+**What FET cannot express** (needs an external check, or a different grid): "at most N hours *on
+one specific day*", conditional constraints ("if X teaches on Saturday, Saturday is in the
+afternoon"), end dates to be optimised. Compute them outside (e.g. with CP-SAT) and pass them to
+FET as unavailability.
 
-## Risultati di `fet-cl`
+## `fet-cl` output
 
 ```
 <outputdir>/
   logs/result.txt                 "Generation successful" | "Time exceeded" | "Cannot precompute - data is wrong - aborting"
-  logs/errors.txt                 blocchi "Title:/Message:" con la causa quando i dati sono rifiutati
-  logs/warnings.txt               avvisi (es. conversione da formato FET-5)
-  logs/max_placed_activities.txt  "…reached N activities placed": ultima riga = massimo raggiunto
-  logs/initial_order.txt          "No: k, Id: …, Teachers: …, Students: …" → l'attività k=N+1 è quella bloccante
-  timetables/<nome>/<nome>_activities.xml      <Activity><Id/><Day/><Hour/><Room/></Activity>
-  timetables/<nome>/<nome>_data_and_timetable.fet   dati + orario bloccato, da riaprire nella GUI
-  timetables/<nome>/*.html, *_soft_conflicts.txt
-  timetables/<nome>-highest/ , <nome>-current/      solo con tempo scaduto: soluzioni parziali
+  logs/errors.txt                 "Title:/Message:" blocks with the cause when the data is rejected
+  logs/warnings.txt               notices (e.g. conversion from FET-5 format)
+  logs/max_placed_activities.txt  "…reached N activities placed": last line = maximum reached
+  logs/initial_order.txt          "No: k, Id: …, Teachers: …, Students: …" → activity k=N+1 is the blocking one
+  timetables/<name>/<name>_activities.xml      <Activity><Id/><Day/><Hour/><Room/></Activity>
+  timetables/<name>/<name>_data_and_timetable.fet   data + locked timetable, to reopen in the GUI
+  timetables/<name>/*.html, *_soft_conflicts.txt
+  timetables/<name>-highest/ , <name>-current/      only on time exceeded: partial solutions
 ```
 
-Nelle soluzioni parziali le attività non piazzate hanno `<Day></Day>` vuoto. Exit code di
-`fet-cl`: 1 se i dati sono rifiutati, **0 anche con tempo scaduto**. Leggere sempre `result.txt`.
+In partial solutions, unplaced activities have an empty `<Day></Day>`. `fet-cl` exit code: 1
+when the data is rejected, **0 even on time exceeded**. Always read `result.txt`. Log and HTML
+language follows `--language` (the scripts recognise English and Italian messages).
 
-La GUI salva per default in `~/fet-results/timetables/<nome>[-N]/`, con un suffisso crescente a
-ogni generazione.
+By default the GUI saves to `~/fet-results/timetables/<name>[-N]/`, with an increasing suffix
+at each generation.
 
-## Opzioni utili di `fet-cl`
+## Useful `fet-cl` options
 
-`--inputfile=F --outputdir=D --timelimitseconds=S --language=it|en_US --htmllevel=0..7
+`--inputfile=F --outputdir=D --timelimitseconds=S --language=en_US|it|… --htmllevel=0..7
 --exportcsv=true --overwritecsv=true --writetimetablesteachers=false … --verbose=true`
-Semi riproducibili: `--randomseeds10=… --randomseeds11=… --randomseeds12=… --randomseeds20=…
---randomseeds21=… --randomseeds22=…`. Si può fermare la generazione con SIGTERM/SIGBREAK
-(scrive comunque current/highest). Elenco completo: `fet-cl --help`.
+Reproducible seeds: `--randomseeds10=… --randomseeds11=… --randomseeds12=… --randomseeds20=…
+--randomseeds21=… --randomseeds22=…`. Generation can be stopped with SIGTERM/SIGBREAK (it still
+writes current/highest). Full list: `fet-cl --help`.

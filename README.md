@@ -1,118 +1,118 @@
-# FET skill per Claude
+# FET skill for Claude
+
+**English** · [Italiano](README.it.md)
 
 Repository: <https://github.com/nispa/fet-claude-skill>
 
-Skill per [Claude Code](https://claude.com/claude-code) che permette a Claude di lavorare con
-**[FET — Free Evolutionary Timetabling](https://lalescu.ro/liviu/fet/)**, il risolutore open
-source di orari scolastici e universitari. Serve a:
+A skill for [Claude Code](https://claude.com/claude-code) that lets Claude work with
+**[FET — Free Evolutionary Timetabling](https://lalescu.ro/liviu/fet/)**, the open-source
+timetable solver for schools and universities. It helps to:
 
-- **controllare** un file `.fet` prima di risolverlo: riferimenti rotti, giorni e ore inesistenti
-  nei vincoli, carico di docenti e classi confrontato con gli slot liberi;
-- **risolverlo** con `fet-cl` (FET da riga di comando), interpretando l'esito. Se FET fallisce,
-  dice *perché*: dati rifiutati con il messaggio di FET, oppure tempo scaduto con l'attività su
-  cui la ricerca si è bloccata;
-- **verificare** l'orario prodotto in modo indipendente da FET (sovrapposizioni, indisponibilità,
-  attività non piazzate) ed **esportarlo** in CSV o JSON, anche per un solo gruppo o docente;
-- scrivere o correggere **generatori** di file `.fet`, con un riferimento pratico al formato.
+- **check** a `.fet` file before solving it: broken references, days and hours that don't exist
+  in constraints, teacher and class workload compared with the free slots;
+- **solve** it with `fet-cl` (FET's command line), interpreting the outcome. When FET fails, it
+  says *why*: data rejected, with FET's own message, or time exceeded, with the activity where
+  the search got stuck;
+- **verify** the generated timetable independently of FET (overlaps, unavailability, unplaced
+  activities) and **export** it to CSV or JSON, for everyone or for a single class or teacher;
+- write or fix **generators** of `.fet` files, with a practical reference to the format.
 
-Gli script usano solo la libreria standard di Python (3.8+). FET **non** è incluso: va
-installato a parte (vedi sotto).
+The scripts use only the Python standard library (3.8+). FET is **not** bundled: it must be
+installed separately (see below).
 
-## Requisiti
+## Requirements
 
-1. **Python 3.8 o successivo.**
-2. **FET**, scaricabile da <https://lalescu.ro/liviu/fet/download.html>:
-   - *Windows*: scaricare lo zip ed estrarlo in una cartella qualsiasi, ad es. `C:\FET`;
-   - *Linux*: pacchetto `fet` della distribuzione (es. `sudo apt install fet`) o sorgenti;
-   - *macOS*: sorgenti, seguendo il README di FET.
+1. **Python 3.8 or later.**
+2. **FET**, available from <https://lalescu.ro/liviu/fet/download.html>:
+   - *Windows*: download the zip and extract it to any folder, e.g. `C:\FET`;
+   - *Linux*: your distribution's `fet` package (e.g. `sudo apt install fet`) or the sources;
+   - *macOS*: build from source, following FET's README.
 
-Il percorso d'installazione è libero. Al primo uso Claude esegue `fet_setup.py`, che cerca
-`fet-cl` nel `PATH` e nelle cartelle usuali. Se non lo trova, Claude chiede il percorso e lo
-salva in `~/.config/fet-skill/config.json`. Si può anche impostarlo a mano:
+The install location is up to you. On first use Claude runs `fet_setup.py`, which looks for
+`fet-cl` in `PATH` and in the usual folders. If it isn't found, Claude asks for the path and
+saves it to `~/.config/fet-skill/config.json`. You can also set it yourself:
 
 ```bash
-python skills/fet/scripts/fet_setup.py --set "C:\FET\fet-7.10.5"      # file o cartella
-# oppure la variabile d'ambiente FET_CL=/percorso/di/fet-cl
+python skills/fet/scripts/fet_setup.py --set "C:\FET\fet-7.10.5"      # file or folder
+# or the environment variable FET_CL=/path/to/fet-cl
 ```
 
-## Installazione
+## Installation
 
-### Come plugin di Claude Code (consigliato)
+### As a Claude Code plugin, from this repository (recommended)
 
-Dentro Claude Code:
+This repository is also a small plugin marketplace. Inside Claude Code:
 
 ```
 /plugin marketplace add nispa/fet-claude-skill
 /plugin install fet@fet-skill
 ```
 
-Gli aggiornamenti arrivano con `/plugin marketplace update fet-skill`.
+Get updates with `/plugin marketplace update fet-skill`.
 
-### Come skill personale (copia manuale)
+### As a personal skill (manual copy)
 
 ```bash
 git clone https://github.com/nispa/fet-claude-skill
 ```
 
+Copy the `skills/fet` folder to `~/.claude/skills/fet` (Windows:
+`%USERPROFILE%\.claude\skills\fet`). The skill is then available in every project.
 
-Copiare la cartella `skills/fet` in `~/.claude/skills/fet` (Windows:
-`%USERPROFILE%\.claude\skills\fet`). La skill è disponibile in tutti i progetti.
+### In a single project
 
-### In un solo progetto
+Copy `skills/fet` to `<project>/.claude/skills/fet` and commit it with the project.
 
-Copiare `skills/fet` in `<progetto>/.claude/skills/fet` e versionarla con il progetto.
+### On claude.ai
 
-### In claude.ai
+Zip the `skills/fet` folder and upload it under *Settings → Capabilities → Skills*.
+Note: on claude.ai the scripts run in Claude's environment, where FET is usually not installed.
+There the skill is mostly useful for writing and checking `.fet` files and reading uploaded results.
 
-Comprimere la cartella `skills/fet` in uno zip e caricarlo da *Impostazioni → Capacità → Skill*.
-Nota: in claude.ai gli script girano nell'ambiente di Claude, dove FET di norma non è
-installato. Lì la skill è utile soprattutto per scrivere e controllare file `.fet` e per
-leggere i risultati caricati.
+## Usage
 
-## Uso
+No special commands are needed: just ask Claude, for example
 
-Non servono comandi particolari: basta chiedere a Claude, ad esempio
-
-> Risolvi `orario.fet` con FET e dimmi se ci sono problemi.
+> Solve `timetable.fet` with FET and tell me if there are problems.
 >
-> Perché FET non trova una soluzione per questo file?
+> Why can't FET find a solution for this file?
 >
-> Esporta in CSV l'orario della classe 3B dalla soluzione di FET.
+> Export class 3B's timetable from the FET solution to CSV.
 
-oppure invocarla esplicitamente con `/fet`. Gli script si possono usare anche da soli:
+or invoke it explicitly with `/fet`. The scripts also work on their own:
 
 ```bash
-python skills/fet/scripts/fet_setup.py                       # FET c'è? dove?
-python skills/fet/scripts/fet_inspect.py orario.fet          # controlli statici
-python skills/fet/scripts/fet_run.py orario.fet --secondi 600
-python skills/fet/scripts/fet_timetable.py orario.fet <cartella>/timetables/orario/orario_activities.xml --csv orario.csv
+python skills/fet/scripts/fet_setup.py                        # is FET there? where?
+python skills/fet/scripts/fet_inspect.py timetable.fet        # static checks
+python skills/fet/scripts/fet_run.py timetable.fet --seconds 600
+python skills/fet/scripts/fet_timetable.py timetable.fet <folder>/timetables/timetable/timetable_activities.xml --csv timetable.csv
 ```
 
-| Exit code di `fet_run.py` | Significato |
+| `fet_run.py` exit code | Meaning |
 |---|---|
-| 0 | soluzione trovata (ultima riga `ORARIO: <percorso di *_activities.xml>`) |
-| 2 | tempo scaduto: stampa l'attività bloccante e la soluzione parziale migliore |
-| 3 | FET ha rifiutato i dati: stampa i messaggi di `logs/errors.txt` |
-| 4 | `fet-cl` non trovato: stampa come installarlo |
+| 0 | solution found (last line `TIMETABLE: <path of *_activities.xml>`) |
+| 2 | time exceeded: prints the blocking activity and the best partial solution |
+| 3 | FET rejected the data: prints the messages from `logs/errors.txt` |
+| 4 | `fet-cl` not found: prints how to install it |
 
-## Struttura
+## Layout
 
 ```
 .claude-plugin/
-  plugin.json          manifest del plugin
-  marketplace.json     permette /plugin marketplace add su questo repository
+  plugin.json          plugin manifest
+  marketplace.json     enables /plugin marketplace add on this repository
 skills/fet/
-  SKILL.md             istruzioni per Claude
-  reference.md         formato .fet, vincoli, file prodotti da fet-cl
+  SKILL.md             instructions for Claude
+  reference.md         .fet format, constraints, files produced by fet-cl
   scripts/             fet_setup · fet_inspect · fet_run · fet_timetable · fet_common
 ```
 
-## Compatibilità
+## Compatibility
 
-Provata con FET 7.10.5 su Windows 11, su file in formato FET 5.x e 7.x. I nomi dei messaggi di
-FET vengono riconosciuti in inglese e in italiano (`--lingua`).
+Tested with FET 7.10.5 on Windows 11, on files in FET 5.x and 7.x format. FET's messages are
+recognised in English and Italian (`--language`).
 
-## Licenza
+## License
 
-Codice della skill: MIT (vedi `LICENSE`). FET è un programma separato, distribuito con licenza
-AGPL v3 dal suo autore, Liviu Lalescu; questa skill non ne contiene alcuna parte.
+Skill code: MIT (see `LICENSE`). FET is a separate program, released under the AGPL v3 by its
+author, Liviu Lalescu; this skill contains no part of it.

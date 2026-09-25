@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Lettura di file .fet (FET 5.x-7.x) e dei risultati *_activities.xml. Solo libreria standard."""
+"""Reading .fet files (FET 5.x-7.x) and *_activities.xml results. Standard library only."""
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
@@ -20,9 +20,10 @@ class Fet:
         self.hours = [txt(h, "Name") for h in r.find("Hours_List").findall("Hour")]
         self.subjects = [txt(s, "Name") for s in r.find("Subjects_List").findall("Subject")]
         self.teachers = [txt(t, "Name") for t in r.find("Teachers_List").findall("Teacher")]
-        self.rooms = [txt(x, "Name") for x in (r.find("Rooms_List") or [])]
+        rooms = r.find("Rooms_List")
+        self.rooms = [txt(x, "Name") for x in rooms] if rooms is not None else []
 
-        # studenti: Year > Group > Subgroup. Ogni nome si espande nelle foglie (sottogruppi)
+        # students: Year > Group > Subgroup. Every name expands to its leaves (subgroups)
         self.students_kind = {}
         self.leaves = {}
         for y in r.find("Students_List").findall("Year"):
@@ -60,22 +61,32 @@ class Fet:
         return list(lst) if lst is not None else []
 
     def not_available(self):
-        """{('teacher'|'students', nome): set((giorno, ora))} dai vincoli *NotAvailableTimes al 100%."""
+        """{('teacher'|'students', name): set((day, hour))} from *NotAvailableTimes constraints at 100%."""
         out = defaultdict(set)
         for c in self.constraints():
             if not c.tag.endswith("NotAvailableTimes") or txt(c, "Active", "true") != "true":
                 continue
             if float(txt(c, "Weight_Percentage", "100")) < 100:
                 continue
-            chi = ("teacher", txt(c, "Teacher")) if c.find("Teacher") is not None else ("students", txt(c, "Students"))
+            who = ("teacher", txt(c, "Teacher")) if c.find("Teacher") is not None else ("students", txt(c, "Students"))
             for na in c.findall("Not_Available_Time"):
-                out[chi].add((txt(na, "Day"), txt(na, "Hour")))
+                out[who].add((txt(na, "Day"), txt(na, "Hour")))
         return out
 
 
 def read_solution(path):
-    """{id: (giorno, ora, aula)} da *_activities.xml; giorno '' = attivita' non piazzata."""
+    """{id: (day, hour, room)} from *_activities.xml; day '' = activity not placed."""
     sol = {}
     for a in ET.parse(path).getroot().findall("Activity"):
         sol[txt(a, "Id")] = (txt(a, "Day"), txt(a, "Hour"), txt(a, "Room"))
     return sol
+
+
+def utf8_console():
+    """Windows console (cp1252): avoid errors on accents and symbols."""
+    import sys
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8", errors="replace")
+        except AttributeError:
+            pass

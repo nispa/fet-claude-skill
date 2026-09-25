@@ -3,12 +3,12 @@
   "owner": {
     "name": "nispa"
   },
-  "description": "Skill per Claude Code che interfaccia FET (Free Evolutionary Timetabling).",
+  "description": "Claude Code skill for FET (Free Evolutionary Timetabling).",
   "plugins": [
     {
       "name": "fet",
       "source": "./",
-      "description": "Genera, risolve e verifica orari con FET (Free Evolutionary Timetabling)."
+      "description": "Generate, solve and verify school timetables with FET (Free Evolutionary Timetabling)."
     }
   ]
 }
