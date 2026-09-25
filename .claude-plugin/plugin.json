@@ -1,0 +1,18 @@
+{
+  "name": "fet",
+  "version": "1.0.0",
+  "description": "Genera, risolve e verifica orari con FET (Free Evolutionary Timetabling): controlli statici del .fet, esecuzione di fet-cl con diagnosi dei fallimenti, verifica indipendente ed esportazione dell'orario.",
+  "author": {
+    "name": "nispa"
+  },
+  "keywords": [
+    "fet",
+    "timetabling",
+    "orario",
+    "scheduling",
+    "school"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/nispa/fet-claude-skill",
+  "repository": "https://github.com/nispa/fet-claude-skill"
+}
