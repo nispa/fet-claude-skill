@@ -1,85 +1,86 @@
 ---
 name: fet
-description: Interfaccia con FET (Free Evolutionary Timetabling) per orari scolastici e universitari. Usala quando si deve creare, generare, modificare, controllare o risolvere un file .fet, lanciare FET/fet-cl da riga di comando, capire perché FET non trova una soluzione ("Time exceeded", "Cannot precompute - data is wrong"), leggere ed esportare l'orario prodotto (*_activities.xml, CSV, HTML), verificare che un orario rispetti i vincoli, o stampare orari per classe o docente. Si attiva anche con "orario", "timetable", "orario lezioni", "calendario lezioni" quando c'è di mezzo FET.
+description: Work with FET (Free Evolutionary Timetabling) for school and university timetables. Use it to create, generate, edit, check or solve a .fet file, run FET/fet-cl from the command line, find out why FET finds no solution ("Time exceeded", "Cannot precompute - data is wrong"), read and export the generated timetable (*_activities.xml, CSV, HTML), verify that a timetable respects its constraints, or print timetables per class or teacher. Also triggers on "timetable", "school schedule", "class schedule", "orario", "orario lezioni" when FET is involved.
 ---
 
-# FET — generare, risolvere e verificare orari
+# FET — generate, solve and verify timetables
 
-FET è un risolutore di orari open source (<https://lalescu.ro/liviu/fet/>). Si lavora così:
-**si scrive un file `.fet` (XML) → lo si risolve con `fet-cl` → si legge e si verifica
-`*_activities.xml`**. Questa skill ha uno script per ciascun passaggio, tutti solo con la
-libreria standard di Python:
+FET is an open-source timetable solver (<https://lalescu.ro/liviu/fet/>). The workflow is:
+**write a `.fet` file (XML) → solve it with `fet-cl` → read and verify `*_activities.xml`**.
+This skill has one script per step, all using only the Python standard library:
 
-| Script | Cosa fa |
+| Script | What it does |
 |---|---|
-| `scripts/fet_setup.py [--set PERCORSO]` | Trova `fet-cl`, ne verifica la versione, salva il percorso; se FET manca spiega come installarlo |
-| `scripts/fet_inspect.py FILE.fet` | Riepilogo e controlli statici **prima** di lanciare FET: riferimenti rotti, giorni/ore inesistenti nei vincoli, carico docenti e studenti confrontato con gli slot liberi |
-| `scripts/fet_run.py FILE.fet [--secondi N] [--out DIR]` | Lancia `fet-cl`, interpreta l'esito e, in caso di fallimento, dice **quale attività** ha bloccato FET |
-| `scripts/fet_timetable.py FILE.fet SOL.xml [--students G] [--teacher T] [--csv/--json]` | Unisce `.fet` e soluzione, verifica sovrapposizioni e indisponibilità **indipendentemente da FET**, esporta |
+| `scripts/fet_setup.py [--set PATH]` | Finds `fet-cl`, checks its version, saves the path; if FET is missing, explains how to install it |
+| `scripts/fet_inspect.py FILE.fet` | Summary and static checks **before** running FET: broken references, days/hours that don't exist in constraints, teacher and student workload vs. free slots |
+| `scripts/fet_run.py FILE.fet [--seconds N] [--out DIR]` | Runs `fet-cl`, interprets the outcome and, on failure, tells **which activity** blocked FET |
+| `scripts/fet_timetable.py FILE.fet SOL.xml [--students G] [--teacher T] [--csv/--json]` | Joins the `.fet` and the solution, checks overlaps and availability **independently of FET**, exports |
 
-Gli script stanno in `scripts/`, accanto a questo `SKILL.md`. La cartella della skill dipende
-da come è installata (`~/.claude/skills/fet/`, `<progetto>/.claude/skills/fet/` o la cache dei
-plugin): usare la *base directory* indicata al caricamento della skill e lanciare gli script con
-il percorso completo, ad es. `python "<base>/scripts/fet_run.py" orario.fet`.
+The scripts live in `scripts/`, next to this `SKILL.md`. The skill folder depends on how it was
+installed (`~/.claude/skills/fet/`, `<project>/.claude/skills/fet/` or the plugin cache): use the
+*base directory* given when the skill is loaded and call the scripts with their full path, e.g.
+`python "<base>/scripts/fet_run.py" timetable.fet`.
 
-## Passo 0 — FET è installato? (sempre, prima di lanciare qualcosa)
+## Step 0 — Is FET installed? (always, before running anything)
 
 ```
 python fet_setup.py
 ```
 
-- **exit 0**: stampa il percorso di `fet-cl` e la versione. Si procede.
-- **exit 1**: FET manca o non è stato trovato. **Fermarsi e chiedere all'utente** di installare
-  FET e di indicare il percorso di `fet-cl` (o della cartella di FET). Riportargli le istruzioni
-  stampate dallo script (download da <https://lalescu.ro/liviu/fet/download.html>). Non
-  cercare FET sul disco a tentativi e non installarlo senza il suo consenso. Avuto il percorso:
-  `python fet_setup.py --set "<percorso>"`. Lo script verifica che si avvii e lo salva in
-  `~/.config/fet-skill/config.json`, così le volte successive non serve più chiederlo.
+- **exit 0**: prints the path of `fet-cl` and its version. Go on.
+- **exit 1**: FET is missing or was not found. **Stop and ask the user** to install FET and to
+  give the path of `fet-cl` (or of the FET folder). Show them the instructions printed by the
+  script (download from <https://lalescu.ro/liviu/fet/download.html>). Do not search the disk by
+  trial and error and do not install it without their consent. Once you have the path:
+  `python fet_setup.py --set "<path>"`. The script checks that it runs and saves it to
+  `~/.config/fet-skill/config.json`, so it doesn't need to be asked again.
 
-Ordine di ricerca: `--fet-cl` → variabile `FET_CL` → configurazione salvata → `PATH` →
-cartelle d'installazione usuali. Se il percorso viene trovato solo con la ricerca nelle cartelle
-usuali, proporre all'utente di fissarlo con `--set`. Nella cartella di `fet-cl` c'è anche
-l'interfaccia grafica (`fet.exe` / `fet`), utile all'utente per aprire e ritoccare a mano i risultati.
+Search order: `--fet-cl` → `FET_CL` environment variable → saved configuration → `PATH` →
+usual install folders. If the path is found only by searching the usual folders, suggest the
+user pin it with `--set`. The `fet-cl` folder also contains the GUI (`fet.exe` / `fet`), useful
+to the user for opening results and adjusting them by hand.
 
-Serve solo Python 3.8+ con la libreria standard; nessun pacchetto da installare.
+Only Python 3.8+ with the standard library is needed; no packages to install.
 
-## Procedura
+## Procedure
 
-1. **Costruire il `.fet` con uno script** (Python o altro), mai scriverlo a mano: centinaia di
-   `Not_Available_Time` sono ingestibili a mano e rigenerare è l'unico modo di tenere i dati
-   coerenti. Se il progetto ha già un generatore, le correzioni vanno lì, non nel `.fet`.
-   Formato, tag e trappole: **leggere `reference.md`** prima di scrivere o modificare un generatore.
-2. `python fet_inspect.py file.fet`: deve chiudersi senza `ERRORI`. Un `IMPOSSIBILE` qui
-   significa che FET fallirà comunque.
-3. `python fet_run.py file.fet --secondi 600`: interpretare l'exit code.
-   - **0**: soluzione trovata. L'ultima riga `ORARIO: …` è il percorso di `*_activities.xml`.
-   - **2, tempo scaduto**: lo script stampa l'attività numero N+1 dell'ordine iniziale, cioè quella
-     su cui FET si è fermato, e il percorso della soluzione parziale (`<nome>-highest`).
-     Quasi sempre il problema è quell'attività o una risorsa che condivide: docente troppo
-     vincolato, gruppo saturo, durata che non entra in nessuna finestra.
-   - **3, dati rifiutati** (`Cannot precompute - data is wrong`): i messaggi di `logs/errors.txt`
-     dicono cosa non torna, ad esempio «number of hours for subgroup is 198 and you have only
-     136 free slots».
-   - **4**: `fet-cl` non trovato: tornare al passo 0.
-4. `python fet_timetable.py file.fet <ORARIO> --quiet`: **verificare sempre**, anche se FET dice
-   "successful". Deve riportare 0 violazioni e 0 non piazzate. Aggiungere poi controlli specifici
-   del progetto, per le regole che il `.fet` non sa esprimere.
-5. Consegna: FET scrive già HTML per gruppi, docenti, aule (`timetables/<nome>/*.html`) e con
-   `--extra --exportcsv=true` anche i CSV. Per stampe su misura (una pagina per classe,
-   colori per materia, righe vuote tolte) conviene generare un HTML proprio da
+1. **Build the `.fet` with a script** (Python or other), never by hand: hundreds of
+   `Not_Available_Time` entries are unmanageable manually and regenerating is the only way to
+   keep the data consistent. If the project already has a generator, fixes go there, not into
+   the `.fet`. Format, tags and pitfalls: **read `reference.md`** before writing or changing a
+   generator.
+2. `python fet_inspect.py file.fet`: must end without `ERRORS`. An `IMPOSSIBLE` here means FET
+   will fail anyway.
+3. `python fet_run.py file.fet --seconds 600`: interpret the exit code.
+   - **0**: solution found. The last line `TIMETABLE: …` is the path of `*_activities.xml`.
+   - **2, time exceeded**: the script prints activity number N+1 of the initial order, i.e. the
+     one where FET got stuck, and the path of the best partial solution (`<name>-highest`).
+     The problem is almost always that activity or a resource it shares: an over-constrained
+     teacher, a saturated class, a duration that fits in no window.
+   - **3, data rejected** (`Cannot precompute - data is wrong`): the messages from
+     `logs/errors.txt` say what doesn't add up, e.g. "number of hours for subgroup is 198 and
+     you have only 136 free slots".
+   - **4**: `fet-cl` not found: go back to step 0.
+4. `python fet_timetable.py file.fet <TIMETABLE> --quiet`: **always verify**, even when FET says
+   "successful". It must report 0 violations and 0 unplaced activities. Then add
+   project-specific checks for rules the `.fet` cannot express.
+5. Delivery: FET already writes HTML for groups, teachers and rooms (`timetables/<name>/*.html`)
+   and, with `--extra --exportcsv=true`, CSV files too. For custom printouts (one page per
+   class, colours per subject, empty rows removed) generate your own HTML from
    `fet_timetable.py --json`.
 
-## Buone regole
+## Good practice
 
-- **Diagnosticare prima di allentare.** Se FET non trova la soluzione, non ammorbidire vincoli
-  alla cieca: leggere l'attività bloccante e il carico in `fet_inspect.py`. Per sapere se un
-  problema è davvero impossibile, un modello CP-SAT (OR-Tools) dà una **prova**, FET no: FET
-  è euristico e un "Time exceeded" non dimostra nulla.
-- I vincoli con `Weight_Percentage` < 100 sono preferenze: FET può violarli. Le regole
-  inderogabili vanno al 100%.
-- FET, dopo averlo aperto, può riscrivere il file in un formato più nuovo (`version="7.x"`). Il
-  file salvato dalla GUI è la migliore fonte per nomi di tag nuovi o dubbi.
-- Una soluzione di FET dipende dal seme casuale: due esecuzioni danno orari diversi, entrambi
-  validi. Se l'utente ha già stampato o approvato un orario, lavorare su **quella** soluzione
-  (cercarla in `~/fet-results/timetables/`, la cartella di default della GUI), non rigenerarla.
-- Non trattare `logs/warnings.txt` come errori: spesso contiene solo la conversione di formato.
+- **Diagnose before relaxing.** If FET finds no solution, don't soften constraints blindly: read
+  the blocking activity and the workload from `fet_inspect.py`. To know whether a problem is
+  truly infeasible, a CP-SAT model (OR-Tools) gives a **proof**; FET doesn't: it is heuristic and
+  a "Time exceeded" proves nothing.
+- Constraints with `Weight_Percentage` < 100 are preferences: FET may break them. Hard rules
+  must be at 100%.
+- Once opened, FET may rewrite the file in a newer format (`version="7.x"`). A file saved by the
+  GUI is the best source for new or doubtful tag names.
+- A FET solution depends on the random seed: two runs give different timetables, both valid.
+  If the user has already printed or approved a timetable, work on **that** solution (look in
+  `~/fet-results/timetables/`, the GUI's default folder) instead of regenerating it.
+- Don't treat `logs/warnings.txt` as errors: it often only contains the format conversion notice.
+- Talk to the user in their language; the script output is in English.

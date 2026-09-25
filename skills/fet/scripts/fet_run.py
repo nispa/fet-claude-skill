@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-fet_run.py — risolve un file .fet con fet-cl (FET da riga di comando) e ne interpreta l'esito.
+fet_run.py — solve a .fet file with fet-cl (FET's command-line solver) and interpret the outcome.
 
-    python fet_run.py orario.fet
-    python fet_run.py orario.fet --out risultati --secondi 600 --lingua it
-    python fet_run.py orario.fet --fet-cl "/percorso/di/fet-cl"
+    python fet_run.py timetable.fet
+    python fet_run.py timetable.fet --out results --seconds 600 --language it
+    python fet_run.py timetable.fet --fet-cl "/path/to/fet-cl"
 
-Stampa una diagnosi leggibile e termina con:
-    0  soluzione trovata          (percorso di *_activities.xml sull'ultima riga "ORARIO: ...")
-    2  tempo scaduto              (stampa l'attivita' su cui FET si e' bloccato)
-    3  dati errati / impossibili  (stampa i messaggi di logs/errors.txt)
-    4  fet-cl non trovato (stampa come installarlo) o errore di esecuzione
+Prints a readable diagnosis and exits with:
+    0  solution found           (path of *_activities.xml on the last line "TIMETABLE: ...")
+    2  time exceeded            (prints the activity where FET got stuck)
+    3  data rejected/infeasible (prints the messages from logs/errors.txt)
+    4  fet-cl not found (prints how to install it) or execution error
 
-Solo libreria standard.
+Standard library only.
 """
 import argparse
 import os
@@ -22,10 +22,10 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fet_setup import istruzioni, trova_fet_cl  # noqa: E402
+from fet_setup import find_fet_cl, instructions  # noqa: E402
 
 
-def leggi(path):
+def read(path):
     for enc in ("utf-8-sig", "cp1252", "latin-1"):
         try:
             with open(path, encoding=enc) as f:
@@ -35,109 +35,108 @@ def leggi(path):
     return ""
 
 
-def messaggi(path, massimo=8):
-    """Messaggi unici da logs/errors.txt o warnings.txt (formato 'Title:/Message:')."""
-    visti, out = set(), []
-    for m in re.findall(r"Message:\s*(.*?)(?:\nButton|\n\n|\Z)", leggi(path), re.S):
+def messages(path, limit=8):
+    """Unique messages from logs/errors.txt or warnings.txt ('Title:/Message:' blocks, any language)."""
+    seen, out = set(), []
+    for m in re.findall(r"(?:Message|Messaggio):\s*(.*?)(?:\n(?:Button|Pulsante)|\n\n|\Z)", read(path), re.S):
         m = " ".join(m.split())
-        chiave = re.sub(r"\d+", "#", m)[:120]         # accorpa i messaggi che differiscono per i numeri
-        if chiave not in visti:
-            visti.add(chiave)
+        key = re.sub(r"\d+", "#", m)[:120]         # merge messages that differ only by numbers
+        if key not in seen:
+            seen.add(key)
             out.append(m)
-    return out[:massimo], len(visti)
+    return out[:limit], len(seen)
 
 
-def attivita_bloccante(logs):
-    """Dopo un tempo scaduto: max N piazzate -> l'attivita' N+1 dell'ordine iniziale."""
-    righe = re.findall(r"(\d+) (?:activities|attivit\S*)", leggi(os.path.join(logs, "max_placed_activities.txt")))
-    if not righe:
+def blocking_activity(logs):
+    """After time exceeded: max N placed -> activity N+1 of the initial order."""
+    rows = re.findall(r"(\d+) (?:activities|attivit\S*)", read(os.path.join(logs, "max_placed_activities.txt")))
+    if not rows:
         return None, None
-    n = int(righe[-1])
-    for riga in leggi(os.path.join(logs, "initial_order.txt")).splitlines():
-        if re.match(rf"\s*(No|N\.?)\s*:?\s*{n + 1}\s*,", riga):
-            return n, riga.strip()
+    n = int(rows[-1])
+    for row in read(os.path.join(logs, "initial_order.txt")).splitlines():
+        if re.match(rf"\s*(No|N\.?)\s*:?\s*{n + 1}\s*,", row):
+            return n, row.strip()
     return n, None
 
 
 def main():
-    for s in (sys.stdout, sys.stderr):   # console Windows (cp1252): niente errori su accenti e simboli
+    for s in (sys.stdout, sys.stderr):   # Windows console (cp1252): no errors on accents and symbols
         try:
             s.reconfigure(encoding="utf-8", errors="replace")
         except AttributeError:
             pass
-    p = argparse.ArgumentParser(description="Risolve un .fet con fet-cl e diagnostica l'esito.")
+    p = argparse.ArgumentParser(description="Solve a .fet file with fet-cl and diagnose the outcome.")
     p.add_argument("fet")
-    p.add_argument("--out", help="cartella dei risultati (default: <nome>_fet_out accanto al file)")
-    p.add_argument("--secondi", type=int, default=600, help="limite di tempo (default 600)")
-    p.add_argument("--lingua", default="en_US", help="lingua dei log/HTML di FET, es. it, en_US")
-    p.add_argument("--fet-cl", help="percorso di fet-cl (altrimenti: FET_CL, configurazione di fet_setup.py, PATH)")
+    p.add_argument("--out", help="results folder (default: <name>_fet_out next to the file)")
+    p.add_argument("--seconds", type=int, default=600, help="time limit (default 600)")
+    p.add_argument("--language", default="en_US", help="language of FET's logs/HTML, e.g. en_US, it")
+    p.add_argument("--fet-cl", help="path of fet-cl (otherwise: FET_CL, fet_setup.py configuration, PATH)")
     p.add_argument("--extra", nargs=argparse.REMAINDER, default=[],
-                   help="altre opzioni passate a fet-cl così come sono (es. --exportcsv=true)")
+                   help="further options passed to fet-cl as they are (e.g. --exportcsv=true)")
     a = p.parse_args()
 
-    exe, _fonte = trova_fet_cl(a.fet_cl)
+    exe, _source = find_fet_cl(a.fet_cl)
     if not exe:
-        print("ERRORE: fet-cl non trovato.\n")
-        print(istruzioni())
+        print("ERROR: fet-cl not found.\n")
+        print(instructions())
         return 4
     fet = os.path.abspath(a.fet)
-    nome = os.path.splitext(os.path.basename(fet))[0]
-    out = os.path.abspath(a.out or os.path.join(os.path.dirname(fet), nome + "_fet_out"))
+    name = os.path.splitext(os.path.basename(fet))[0]
+    out = os.path.abspath(a.out or os.path.join(os.path.dirname(fet), name + "_fet_out"))
     os.makedirs(out, exist_ok=True)
 
-    cmd = [exe, f"--inputfile={fet}", f"--outputdir={out}", f"--timelimitseconds={a.secondi}",
-           f"--language={a.lingua}", *a.extra]
+    cmd = [exe, f"--inputfile={fet}", f"--outputdir={out}", f"--timelimitseconds={a.seconds}",
+           f"--language={a.language}", *a.extra]
     print("fet-cl :", exe)
     print("input  :", fet)
     print("output :", out)
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, errors="replace",
-                           timeout=a.secondi + 120)
+                           timeout=a.seconds + 120)
     except subprocess.TimeoutExpired:
-        print("ERRORE: fet-cl non ha terminato entro il limite.")
+        print("ERROR: fet-cl did not finish within the limit.")
         return 4
     console = (r.stdout + r.stderr).strip()
 
     logs = os.path.join(out, "logs")
-    esito = leggi(os.path.join(logs, "result.txt")) + "\n" + console
+    outcome = read(os.path.join(logs, "result.txt")) + "\n" + console
     tt = os.path.join(out, "timetables")
 
-    avvisi, n_avvisi = messaggi(os.path.join(logs, "warnings.txt"))
-    if avvisi:
-        print(f"\nAvvisi FET ({n_avvisi} distinti):")
-        for m in avvisi:
+    warnings, n_warn = messages(os.path.join(logs, "warnings.txt"))
+    if warnings:
+        print(f"\nFET notices ({n_warn} distinct):")
+        for m in warnings:
             print("  -", m[:300])
 
-    if re.search(r"Generation successful|Generazione riuscita|successful", esito, re.I):
-        xml = os.path.join(tt, nome, f"{nome}_activities.xml")
-        soft = os.path.join(tt, nome, f"{nome}_soft_conflicts.txt")
+    if re.search(r"Generation successful|Generazione riuscita|successful", outcome, re.I):
+        xml = os.path.join(tt, name, f"{name}_activities.xml")
+        soft = os.path.join(tt, name, f"{name}_soft_conflicts.txt")
         m = re.search(r"Total searching time \(seconds\):\s*(\d+)", console)
-        print(f"\nESITO: soluzione trovata" + (f" in {m.group(1)} s" if m else ""))
-        s = leggi(soft)
-        m2 = re.search(r"(?:broken soft constraints|vincoli leggeri infranti)\D*(\d+)", s, re.I)
+        print("\nOUTCOME: solution found" + (f" in {m.group(1)} s" if m else ""))
+        m2 = re.search(r"(?:broken soft constraints|vincoli leggeri infranti)\D*(\d+)", read(soft), re.I)
         if m2:
-            print(f"Vincoli leggeri violati: {m2.group(1)}   (dettaglio: {soft})")
-        print(f"ORARIO: {xml}")
+            print(f"Broken soft constraints: {m2.group(1)}   (details: {soft})")
+        print(f"TIMETABLE: {xml}")
         return 0
 
-    if re.search(r"Time exceeded|Tempo (scaduto|superato)", esito, re.I):
-        n, riga = attivita_bloccante(logs)
-        print("\nESITO: tempo scaduto, nessuna soluzione completa.")
+    if re.search(r"Time exceeded|Tempo (scaduto|superato)", outcome, re.I):
+        n, row = blocking_activity(logs)
+        print("\nOUTCOME: time exceeded, no complete solution.")
         if n is not None:
-            print(f"FET e' arrivato al massimo a {n} attivita' piazzate. Attivita' da esaminare (la n. {n + 1}):")
-            print("  ", riga or "(non trovata in initial_order.txt)")
-        best = os.path.join(tt, nome + "-highest", f"{nome}_activities.xml")
+            print(f"FET placed at most {n} activities. Activity to examine (no. {n + 1}):")
+            print("  ", row or "(not found in initial_order.txt)")
+        best = os.path.join(tt, name + "-highest", f"{name}_activities.xml")
         if os.path.exists(best):
-            print(f"Soluzione parziale migliore (attivita' non piazzate = <Day> vuoto): {best}")
+            print(f"Best partial solution (unplaced activities have an empty <Day>): {best}")
         return 2
 
-    errori, n_err = messaggi(os.path.join(logs, "errors.txt"))
-    print("\nESITO: FET ha rifiutato i dati (" + (console.splitlines()[-1] if console else "errore") + ")")
-    for m in errori:
+    errors, n_err = messages(os.path.join(logs, "errors.txt"))
+    print("\nOUTCOME: FET rejected the data (" + (console.splitlines()[-1] if console else "error") + ")")
+    for m in errors:
         print("  -", m[:400])
-    if n_err > len(errori):
-        print(f"  ... e altri {n_err - len(errori)} messaggi in {os.path.join(logs, 'errors.txt')}")
-    if not errori and console:
+    if n_err > len(errors):
+        print(f"  ... and {n_err - len(errors)} more messages in {os.path.join(logs, 'errors.txt')}")
+    if not errors and console:
         print(console[-2000:])
     return 3
 
