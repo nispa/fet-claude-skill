@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*_fet_out/
+fet-results/
+.DS_Store
+Thumbs.db
