@@ -8,7 +8,7 @@
   (CP-SAT, proven minimum), with `--only`, `--exclude`, `--move` and `--write-fet` to let FET confirm.
 - `fet_feasibility.py`: proves feasibility / impossibility and the earliest end per class and teacher.
   Both need OR-Tools (optional); they are generic versions of tools developed on a real project.
-- Offline test suite (`tests/`) and GitHub Actions CI on Linux and Windows, Python 3.8 and 3.12.
+- Offline test suite (`tests/`) and GitHub Actions CI on Linux and Windows, Python 3.8 (Windows), 3.9 and 3.13.
 - `reference.md`: pitfall on `<Virtual>` rooms (FET rejects a virtual room without real rooms).
 - README: privacy note, quick example, tests; `CONTRIBUTING.md`.
 

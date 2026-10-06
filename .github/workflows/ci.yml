@@ -4,14 +4,21 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.8", "3.12"]
+        python: ["3.9", "3.13"]
+        include:
+          - os: windows-latest   # oldest supported Python (CP-SAT tests are skipped there)
+            python: "3.8"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: pip install ortools || echo "OR-Tools not available for this Python: CP-SAT tests skipped"
+      - name: Install OR-Tools (optional)
         shell: bash
-      - run: python -m unittest discover -s tests -v
+        run: |
+          pip install ortools || echo "OR-Tools not available for this Python - CP-SAT tests skipped"
+      - name: Tests
+        run: python -m unittest discover -s tests -v
