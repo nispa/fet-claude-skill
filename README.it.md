@@ -66,7 +66,15 @@ Copiare `skills/fet` in `<progetto>/.claude/skills/fet` e versionarla con il pro
 
 ### In claude.ai
 
-Comprimere la cartella `skills/fet` in uno zip e caricarlo da *Impostazioni → Capacità → Skill*.
+Caricare il **plugin completo** come zip (uno zip della sola cartella `skills/fet` viene
+rifiutato). Si crea con
+
+```bash
+python tools/make_plugin_zip.py      # scrive dist/fet-plugin.zip
+```
+
+e poi si carica `dist/fet-plugin.zip` dalle impostazioni di claude.ai (se c'è una versione
+precedente, va tolta prima).
 Nota: in claude.ai gli script girano nell'ambiente di Claude, dove FET di norma non è
 installato. Lì la skill è utile soprattutto per scrivere e controllare file `.fet` e per
 leggere i risultati caricati.
@@ -146,6 +154,7 @@ skills/fet/
                      fet_repair · fet_feasibility · fet_cpsat   (richiedono ortools)
 examples/mini-school/  dati inventati + generatore guidato dai dati
 tests/                 test offline (eseguiti in CI)
+tools/make_plugin_zip.py  crea lo zip per claude.ai
 ```
 
 ## Compatibilità

@@ -69,7 +69,15 @@ Copy `skills/fet` to `<project>/.claude/skills/fet` and commit it with the proje
 
 ### On claude.ai
 
-Zip the `skills/fet` folder and upload it under *Settings → Capabilities → Skills*.
+Upload the **whole plugin** as a zip (a zip of the `skills/fet` folder alone is rejected).
+Build it with
+
+```bash
+python tools/make_plugin_zip.py      # writes dist/fet-plugin.zip
+```
+
+then upload `dist/fet-plugin.zip` from claude.ai's settings (if a previous version is there,
+remove it first).
 Note: on claude.ai the scripts run in Claude's environment, where FET is usually not installed.
 There the skill is mostly useful for writing and checking `.fet` files and reading uploaded results.
 
@@ -148,6 +156,7 @@ skills/fet/
                      fet_repair · fet_feasibility · fet_cpsat   (need ortools)
 examples/mini-school/  fictional data + data-driven generator
 tests/                 offline tests (run in CI)
+tools/make_plugin_zip.py  builds the zip for claude.ai
 ```
 
 ## Compatibility

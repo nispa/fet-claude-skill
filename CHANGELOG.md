@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 — 2026-10-06
+
+- claude.ai installation: upload the whole plugin (`.claude-plugin/plugin.json` + `skills/`);
+  a zip of `skills/fet` alone is rejected. New `tools/make_plugin_zip.py` builds it.
+- `fet_repair.py` works on Python 3.8 (no `ElementTree.indent` there).
+
 ## 1.2.0 — 2026-10-06
 
 - `examples/mini-school/`: fictional data (`data.json`) and a data-driven `.fet` generator

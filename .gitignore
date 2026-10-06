@@ -4,3 +4,4 @@ __pycache__/
 fet-results/
 .DS_Store
 Thumbs.db
+dist/
