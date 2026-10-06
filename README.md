@@ -15,10 +15,14 @@ timetable solver for schools and universities. It helps to:
   the search got stuck;
 - **verify** the generated timetable independently of FET (overlaps, unavailability, unplaced
   activities) and **export** it to CSV or JSON, for everyone or for a single class or teacher;
+- **repair** a timetable that is already published when a teacher's availability changes,
+  moving the fewest lessons (`fet_repair.py`, CP-SAT, proven minimum);
+- **prove** whether a calendar is feasible and by when it can end (`fet_feasibility.py`): FET is
+  heuristic and "time exceeded" proves nothing;
 - write or fix **generators** of `.fet` files, with a practical reference to the format.
 
-The scripts use only the Python standard library (3.8+). FET is **not** bundled: it must be
-installed separately (see below).
+The first four scripts use only the Python standard library (3.8+); the two CP-SAT ones need
+`pip install ortools`. FET is **not** bundled: it must be installed separately (see below).
 
 ## Requirements
 
@@ -95,6 +99,42 @@ python skills/fet/scripts/fet_timetable.py timetable.fet <folder>/timetables/tim
 | 3 | FET rejected the data: prints the messages from `logs/errors.txt` |
 | 4 | `fet-cl` not found: prints how to install it |
 
+## Try it in two minutes
+
+`examples/mini-school/` holds a tiny **fictional** school (`data.json`) and a data-driven generator
+that turns it into a `.fet` file, using real dates, lessons shared by several classes and teacher
+availability. With FET installed:
+
+```bash
+cd examples/mini-school
+python generate_fet.py data.json mini-school.fet
+python ../../skills/fet/scripts/fet_inspect.py mini-school.fet
+python ../../skills/fet/scripts/fet_run.py mini-school.fet --seconds 60
+```
+
+Use it as a model for your own generator: your data goes in the JSON, not in the code.
+
+Repair a published timetable after a change (needs `pip install ortools`):
+
+```bash
+# teacher "Rossi" is no longer available on Wednesdays: edit data.json, regenerate new.fet, then
+python ../../skills/fet/scripts/fet_repair.py new.fet old_activities.xml --write-fet locked.fet
+python ../../skills/fet/scripts/fet_run.py locked.fet      # FET confirms the repair
+python ../../skills/fet/scripts/fet_feasibility.py mini-school.fet --before "Fri 25/09"   # proven yes/no
+```
+
+## Privacy
+
+The skill runs on your machine and sends nothing anywhere by itself. But when Claude reads your
+files, their content (names of teachers, availability, classes) is processed by Claude: check your
+organisation's data-protection rules before using real data, or anonymise it first.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v      # offline, no FET needed
+```
+
 ## Layout
 
 ```
@@ -105,6 +145,9 @@ skills/fet/
   SKILL.md             instructions for Claude
   reference.md         .fet format, constraints, files produced by fet-cl
   scripts/             fet_setup · fet_inspect · fet_run · fet_timetable · fet_common
+                     fet_repair · fet_feasibility · fet_cpsat   (need ortools)
+examples/mini-school/  fictional data + data-driven generator
+tests/                 offline tests (run in CI)
 ```
 
 ## Compatibility

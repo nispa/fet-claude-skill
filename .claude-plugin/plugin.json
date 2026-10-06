@@ -1,6 +1,6 @@
 {
   "name": "fet",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Generate, solve and verify school timetables with FET (Free Evolutionary Timetabling): static checks of .fet files, fet-cl runs with failure diagnosis, independent verification and export of the timetable.",
   "author": {
     "name": "nispa"

@@ -40,6 +40,11 @@ not creating the slot (`12-13` followed by `15-16`). But FET treats two slots th
 consecutive in the list as **adjacent**, so a 2-hour activity may straddle the break. If it must
 not, make the slot before the break unavailable or use a `Break`.
 
+**Rooms.** For a purely online course declare one ordinary room with a huge capacity and
+`<Virtual>false</Virtual>`. In FET, *Virtual* means "a room made of several real rooms": with
+`true` and no real rooms FET rejects the file (`The specified number of sets of real rooms was not
+found ... for the virtual room`).
+
 ## Activities
 
 ```xml

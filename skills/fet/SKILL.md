@@ -15,6 +15,8 @@ This skill has one script per step, all using only the Python standard library:
 | `scripts/fet_inspect.py FILE.fet` | Summary and static checks **before** running FET: broken references, days/hours that don't exist in constraints, teacher and student workload vs. free slots |
 | `scripts/fet_run.py FILE.fet [--seconds N] [--out DIR]` | Runs `fet-cl`, interprets the outcome and, on failure, tells **which activity** blocked FET |
 | `scripts/fet_timetable.py FILE.fet SOL.xml [--students G] [--teacher T] [--csv/--json]` | Joins the `.fet` and the solution, checks overlaps and availability **independently of FET**, exports |
+| `scripts/fet_repair.py NEW.fet OLD_activities.xml` | *(needs `pip install ortools`)* adapts an **already published** timetable to new constraints (a teacher changes availability) moving the **fewest lessons**, proven; `--write-fet` writes a copy with all lessons locked, to let FET confirm |
+| `scripts/fet_feasibility.py FILE.fet [--before DAY]` | *(needs `pip install ortools`)* **proves** whether the calendar is feasible ("by when can we finish?", impossible or not), with the earliest end per class and teacher |
 
 The scripts live in `scripts/`, next to this `SKILL.md`. The skill folder depends on how it was
 installed (`~/.claude/skills/fet/`, `<project>/.claude/skills/fet/` or the plugin cache): use the
@@ -40,7 +42,8 @@ usual install folders. If the path is found only by searching the usual folders,
 user pin it with `--set`. The `fet-cl` folder also contains the GUI (`fet.exe` / `fet`), useful
 to the user for opening results and adjusting them by hand.
 
-Only Python 3.8+ with the standard library is needed; no packages to install.
+Python 3.8+ with the standard library is enough for the first four scripts. Only `fet_repair.py` and
+`fet_feasibility.py` need OR-Tools (`pip install ortools`, Python 3.9+): ask before installing it.
 
 ## Procedure
 
@@ -48,7 +51,8 @@ Only Python 3.8+ with the standard library is needed; no packages to install.
    `Not_Available_Time` entries are unmanageable manually and regenerating is the only way to
    keep the data consistent. If the project already has a generator, fixes go there, not into
    the `.fet`. Format, tags and pitfalls: **read `reference.md`** before writing or changing a
-   generator.
+   generator. A minimal data-driven generator (JSON in, `.fet` out, real dates, shared lessons,
+   teacher availability) is in the repository at `examples/mini-school/` — use it as a model.
 2. `python fet_inspect.py file.fet`: must end without `ERRORS`. An `IMPOSSIBLE` here means FET
    will fail anyway.
 3. `python fet_run.py file.fet --seconds 600`: interpret the exit code.
@@ -68,6 +72,15 @@ Only Python 3.8+ with the standard library is needed; no packages to install.
    and, with `--extra --exportcsv=true`, CSV files too. For custom printouts (one page per
    class, colours per subject, empty rows removed) generate your own HTML from
    `fet_timetable.py --json`.
+6. **When a timetable is already published and something changes** (a teacher is no longer
+   available): do **not** regenerate with FET, it gives a completely different calendar. Update the
+   data, regenerate the `.fet`, then `fet_repair.py new.fet old_activities.xml --write-fet locked.fet`:
+   it moves the minimum number of lessons and lists them. Confirm with `fet_run.py locked.fet`, then
+   `fet_timetable.py`. Use `--only Teacher1,Teacher2` to forbid moving anybody else's lessons.
+7. **When FET cannot find a solution** or the question is "by when can this end?", run
+   `fet_feasibility.py`: unlike FET it gives a **proof** (feasible / impossible), so you know whether
+   to relax the data or just wait for a longer run. The scripts list the constraint types they do
+   *not* model: those must be checked on FET's own result.
 
 ## Good practice
 

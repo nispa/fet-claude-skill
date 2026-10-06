@@ -97,6 +97,42 @@ python skills/fet/scripts/fet_timetable.py orario.fet <cartella>/timetables/orar
 | 3 | FET ha rifiutato i dati: stampa i messaggi di `logs/errors.txt` |
 | 4 | `fet-cl` non trovato: stampa come installarlo |
 
+## Provalo in due minuti
+
+`examples/mini-school/` contiene una piccola scuola **inventata** (`data.json`) e un generatore
+guidato dai dati che la trasforma in un file `.fet`, con date reali, lezioni condivise tra più
+classi e disponibilità dei docenti. Con FET installato:
+
+```bash
+cd examples/mini-school
+python generate_fet.py data.json mini-school.fet
+python ../../skills/fet/scripts/fet_inspect.py mini-school.fet
+python ../../skills/fet/scripts/fet_run.py mini-school.fet --seconds 60
+```
+
+Usalo come modello per il tuo generatore: i dati stanno nel JSON, non nel codice.
+
+Riparare un orario già pubblicato dopo una modifica (serve `pip install ortools`):
+
+```bash
+# il docente "Rossi" non è più disponibile il mercoledì: modifica data.json, rigenera new.fet, poi
+python ../../skills/fet/scripts/fet_repair.py new.fet old_activities.xml --write-fet locked.fet
+python ../../skills/fet/scripts/fet_run.py locked.fet      # FET conferma la riparazione
+python ../../skills/fet/scripts/fet_feasibility.py mini-school.fet --before "Fri 25/09"   # sì/no dimostrato
+```
+
+## Privacy
+
+La skill gira sul tuo computer e di suo non invia nulla. Ma quando Claude legge i tuoi file, il
+contenuto (nomi dei docenti, disponibilità, classi) viene elaborato da Claude: verifica le regole
+sulla protezione dei dati della tua organizzazione prima di usare dati reali, oppure anonimizzali.
+
+## Test
+
+```bash
+python -m unittest discover -s tests -v      # offline, non serve FET
+```
+
 ## Struttura
 
 ```
@@ -107,6 +143,9 @@ skills/fet/
   SKILL.md             istruzioni per Claude
   reference.md         formato .fet, vincoli, file prodotti da fet-cl
   scripts/             fet_setup · fet_inspect · fet_run · fet_timetable · fet_common
+                     fet_repair · fet_feasibility · fet_cpsat   (richiedono ortools)
+examples/mini-school/  dati inventati + generatore guidato dai dati
+tests/                 test offline (eseguiti in CI)
 ```
 
 ## Compatibilità

@@ -1,0 +1,23 @@
+{
+  "institution": "Example Academy (fictional data)",
+  "start": "2026-09-14",
+  "end": "2026-10-09",
+  "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  "holidays": ["2026-09-30"],
+  "hours": ["15-16", "16-17", "17-18", "18-19"],
+  "max_hours_daily": 4,
+  "teachers": {
+    "Rossi":   {"days": ["Mon", "Tue", "Wed"]},
+    "Bianchi": {},
+    "Verdi":   {"days": ["Tue", "Thu"], "not_before": "16-17", "unavailable_dates": ["2026-09-22"]},
+    "Neri":    {"not_before": "17-18"}
+  },
+  "groups": ["1A", "1B", "2A"],
+  "courses": [
+    {"subject": "Maths",      "teacher": "Rossi",   "groups": ["1A", "1B"],       "hours": 6, "block": 2},
+    {"subject": "Literature", "teacher": "Bianchi", "groups": ["1A", "1B", "2A"], "hours": 4, "block": 2},
+    {"subject": "Science",    "teacher": "Verdi",   "groups": ["2A"],             "hours": 6, "block": 2},
+    {"subject": "History",    "teacher": "Neri",    "groups": ["1A"],             "hours": 4, "block": 2},
+    {"subject": "Art",        "teacher": "Verdi",   "groups": ["1B"],             "hours": 4, "block": 2}
+  ]
+}

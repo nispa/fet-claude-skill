@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Activities_Timetable>
+  <Activity>
+    <Id>1</Id>
+    <Day>Wed 23/09</Day>
+    <Hour>16-17</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>2</Id>
+    <Day>Mon 21/09</Day>
+    <Hour>16-17</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>3</Id>
+    <Day>Wed 07/10</Day>
+    <Hour>15-16</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>4</Id>
+    <Day>Fri 02/10</Day>
+    <Hour>17-18</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>5</Id>
+    <Day>Thu 24/09</Day>
+    <Hour>15-16</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>6</Id>
+    <Day>Thu 24/09</Day>
+    <Hour>17-18</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>7</Id>
+    <Day>Tue 06/10</Day>
+    <Hour>16-17</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>8</Id>
+    <Day>Thu 01/10</Day>
+    <Hour>16-17</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>9</Id>
+    <Day>Wed 16/09</Day>
+    <Hour>17-18</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>10</Id>
+    <Day>Thu 17/09</Day>
+    <Hour>17-18</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>11</Id>
+    <Day>Tue 29/09</Day>
+    <Hour>17-18</Hour>
+    <Room></Room>
+  </Activity>
+  <Activity>
+    <Id>12</Id>
+    <Day>Tue 15/09</Day>
+    <Hour>17-18</Hour>
+    <Room></Room>
+  </Activity>
+</Activities_Timetable>
