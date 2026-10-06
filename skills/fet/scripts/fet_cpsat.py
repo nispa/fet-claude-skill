@@ -207,7 +207,8 @@ def write_solution(path, f, placement, extra_unplaced=()):
         ET.SubElement(e, "Day").text = f.days[d] if d is not None else ""
         ET.SubElement(e, "Hour").text = f.hours[h] if h is not None else ""
         ET.SubElement(e, "Room").text = ""
-    ET.indent(root)
+    if hasattr(ET, "indent"):                   # Python 3.9+; on 3.8 the file is just not indented
+        ET.indent(root)
     ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
 
 

@@ -43,7 +43,7 @@ user pin it with `--set`. The `fet-cl` folder also contains the GUI (`fet.exe` /
 to the user for opening results and adjusting them by hand.
 
 Python 3.8+ with the standard library is enough for the first four scripts. Only `fet_repair.py` and
-`fet_feasibility.py` need OR-Tools (`pip install ortools`, Python 3.9+): ask before installing it.
+`fet_feasibility.py` need OR-Tools (`pip install ortools`): ask before installing it.
 
 ## Procedure
 
